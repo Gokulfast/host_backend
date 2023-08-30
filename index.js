@@ -76,7 +76,7 @@ app.post("/login", (req, res)=> {
     User.findOne({email:email})
         .then((foundUser)=> {
             if(foundUser && foundUser.password === password){
-                res.send({message:"Welcome "+foundUser.name,user:foundUser,loginuser:true})
+                res.send({message:"Welcome "+foundUser.name,loginuser:true})
             } else {
                 res.send({message:"Invalid Mail",loginuser:false})
             }
@@ -108,18 +108,18 @@ User.findOne({email:email})
                 html:content,
                 };
                 console.log(foundUser.email)
-            //   transporter.sendMail(mailOptions, (error, info) => {
-            //     if (error) {
-            //       console.log('Error occurred:', error);
-            //     } else {
-            //       console.log('Email sent:', info.response);
-            //       setTimeout(()=>{
-            //         OTP = 0
-            //         console.log(OTP)
-            //       },1000)
+              transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                  console.log('Error occurred:', error);
+                } else {
+                  console.log('Email sent:', info.response);
+                  setTimeout(()=>{
+                    OTP = 0
+                    console.log(OTP)
+                  },1000)
 
-            //     }
-            //   });
+                }
+              });
         }
         else{
             res.send({message:"Invalid Mail",b:false})
