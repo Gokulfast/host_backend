@@ -21,7 +21,7 @@ app.use(session({
         maxAge:1000 *60*60*24
     }
 }))
-mongoose.set('bufferCommands', false);
+mongoose.set('bufferCommands',true);
 try {
 mongoose.connect(process.env.DATABASE, {
     useNewUrlParser: true,
