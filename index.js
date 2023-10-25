@@ -77,7 +77,7 @@ try {
 
 app.get('/products',async (req, res) => {
 try {
-    const response =  await axios.get('https://gokulfast.github.io/data/data.json');
+    const response =  await axios.get('https://gokuls0611.github.io/data/data.json');
     res.send(response.data);
 } catch (error) {
     console.error(error);
