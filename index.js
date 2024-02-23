@@ -6,7 +6,6 @@ require("dotenv").config({path:'config.env'})
 const bcrypt = require('bcrypt')
 const jwt  = require('jsonwebtoken')
 const axios  = require("axios")
-const salt = 10
 const currentDateTime = new Date();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -82,7 +81,7 @@ app.post("/",(req,res)=>{
         if (!req.body.t) {
           throw new Error('JWT token is missing.');
         }
-        const decoded = jwt.verify(req.body.t,"jwtSecretKey");
+        const decoded = jwt.verify(req.body.t,"process.env.KEY");
         console.log(decoded)
         const lgt = decoded.id
         User.findOne({_id:lgt})
@@ -116,7 +115,7 @@ app.post("/register", (req, res)=> {
             if(foundUser){
                 res.send({message: "User already registerd",Login:true})
             } else {
-                bcrypt.hash(password.toString(),salt,(err,password)=>{
+                bcrypt.hash(password.toString(),process.env.process.env.SALT,(err,password)=>{
                     if(err){
                         console.log(err);
                     }
@@ -146,7 +145,7 @@ app.post("/login", (req, res)=> {
                     else if(response){
                         const id = foundUser._id
                         console.log(id)
-                        const token = jwt.sign({id},"jwtSecretKey")
+                        const token = jwt.sign({id},"process.env.KEY")
                         res.send({message:"Welcome "+foundUser.name,Login:true,token:token})
                         console.log(token)
                         User.updateOne({ email:email },{$set:{logouttime:new Date(currentDateTime.getTime() + 60 * 60 * 1000)}})
@@ -192,7 +191,7 @@ app.post('/verifyotp',(req,res)=>{
 
 app.post('/setPassword',(req,res)=>{
     const {email,password} = req.body
-    bcrypt.hash(password.toString(),salt,(err,password)=>{
+    bcrypt.hash(password.toString(),process.env.process.env.SALT,(err,password)=>{
         if(err){
             console.log(err);
         }
@@ -213,7 +212,7 @@ app.post('/setPassword',(req,res)=>{
 // place orders
 app.post('/placeorders',(req,res)=>{
     const {cart,t} = req.body
-    const decoded = jwt.verify(t,"jwtSecretKey");
+    const decoded = jwt.verify(t,"process.env.KEY");
     console.log(decoded)
     const lgt = decoded.id
     User.findOne({_id:lgt})
@@ -230,7 +229,7 @@ app.post('/placeorders',(req,res)=>{
 
 app.post("/orderList",(req,res)=>{
     const {t} = req.body
-    const decoded = jwt.verify(t,"jwtSecretKey");
+    const decoded = jwt.verify(t,"process.env.KEY");
     const lgt = decoded.id
     User.findOne({_id:lgt})
     .then((foundUser)=>{
@@ -245,7 +244,7 @@ app.post("/orderList",(req,res)=>{
 
 app.post("/deleteOrder",(req,res)=>{
     const {t,id} = req.body
-    const decoded = jwt.verify(t,"jwtSecretKey");
+    const decoded = jwt.verify(t,"process.env.KEY");
     const lgt = decoded.id
     User.updateOne({_id:lgt},{$pull: {cart: {_id:id}}})
     .then((foundUser)=>{
