@@ -191,7 +191,7 @@ app.post('/verifyotp',(req,res)=>{
 
 app.post('/setPassword',(req,res)=>{
     const {email,password} = req.body
-    bcrypt.hash(password.toString(),process.env.process.env.SALT,(err,password)=>{
+    bcrypt.hash(password.toString(),process.env.SALT,(err,password)=>{
         if(err){
             console.log(err);
         }
