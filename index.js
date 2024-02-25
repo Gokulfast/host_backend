@@ -115,7 +115,7 @@ app.post("/register", (req, res)=> {
             if(foundUser){
                 res.send({message: "User already registerd",Login:true})
             } else {
-                bcrypt.hash(password.toString(),process.env.SALT,(err,password)=>{
+                bcrypt.hash(password.toString(),Number(process.env.SALT),(err,password)=>{
                     if(err){
                         console.log(err);
                     }
@@ -191,7 +191,7 @@ app.post('/verifyotp',(req,res)=>{
 
 app.post('/setPassword',(req,res)=>{
     const {email,password} = req.body
-    bcrypt.hash(password.toString(),process.env.SALT,(err,password)=>{
+    bcrypt.hash(password.toString(),Number(process.env.SALT),(err,password)=>{
         if(err){
             console.log(err);
         }
