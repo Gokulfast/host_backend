@@ -20,9 +20,8 @@ app.use(cors(
 ))
 
 mongoose.set('bufferCommands',true);
-console.log(process.env.DATABASE_LOCAL)
 try {
-mongoose.connect(process.env.DATABASE_LOCAL, {
+mongoose.connect(process.env.DATABASE, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
