@@ -1,11 +1,13 @@
 const express = require("express")
 const cors = require("cors")
 const mongoose = require("mongoose")
+const nodemailer = require('nodemailer')
 const app = express()
 require("dotenv").config({path:'config.env'})
 const bcrypt = require('bcrypt')
 const jwt  = require('jsonwebtoken')
 const axios  = require("axios")
+const salt = 10
 const currentDateTime = new Date();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -18,8 +20,9 @@ app.use(cors(
 ))
 
 mongoose.set('bufferCommands',true);
+console.log(process.env.DATABASE_LOCAL)
 try {
-mongoose.connect(process.env.DATABASE, {
+mongoose.connect(process.env.DATABASE_LOCAL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
@@ -75,13 +78,15 @@ try {
 });
 
 
+
+
 //session
 app.post("/",(req,res)=>{
     try {
         if (!req.body.t) {
           throw new Error('JWT token is missing.');
         }
-        const decoded = jwt.verify(req.body.t,"process.env.KEY");
+        const decoded = jwt.verify(req.body.t,"jwtSecretKey");
         console.log(decoded)
         const lgt = decoded.id
         User.findOne({_id:lgt})
@@ -130,7 +135,6 @@ app.post("/register", (req, res)=> {
             }
     })   
 }) 
-
 app.post("/login", (req, res)=> {
     console.log(req.body)
     const {email, password} = req.body
@@ -146,7 +150,7 @@ app.post("/login", (req, res)=> {
                     else if(response){
                         const id = foundUser._id
                         console.log(id)
-                        const token = jwt.sign({id},"process.env.KEY")
+                        const token = jwt.sign({id},"jwtSecretKey")
                         res.send({message:"Welcome "+foundUser.name,Login:true,token:token})
                         console.log(token)
                         User.updateOne({ email:email },{$set:{logouttime:new Date(currentDateTime.getTime() + 60 * 60 * 1000)}})
@@ -190,9 +194,68 @@ app.post('/verifyotp',(req,res)=>{
     )
 })
 
+
+//Mail Configuration
+console.log(process.env.PASS)
+const transporter = nodemailer.createTransport({
+    host:process.env.HOST,
+    service:process.env.SERVICE,
+    port:567,
+    secure:process.env.SECURE,
+    auth:{
+        user:process.env.USER,
+        pass:process.env.PASS
+    }
+})
+
+
+app.post("/forgotPassword",(req,res)=>{
+    const {email} = req.body
+    User.findOne({email:email})
+    .then((foundUser)=>{
+            if(foundUser){
+                OTP = Math.floor(1000+ Math.random() * 9000)
+                let content = `<p>Hi ${foundUser.name} your OTP to change Password ${OTP}</p>`
+                let mailOptions = {
+                    from: process.env.USER,
+                    to: foundUser.email,
+                    subject: 'Reset Password',
+                    html:content,
+                    }
+                    console.log(email)
+                transporter.sendMail(mailOptions,(error, info) => {
+                    if (error) {
+                    console.log('Error occurred:', error);
+                    } else {
+                    console.log('Email sent:', info.response);
+                    OTP  = 0
+                    }
+                });
+                console.log(OTP) 
+                User.updateOne({email:foundUser.email},{$set:{otp:OTP}})
+                .then(
+                res.send({
+                    message:"Enter OTP",
+                    b:true
+                }))
+               
+            }
+            else{
+                res.send({message:"Invalid Mail",b:false})
+            }
+        })
+        .catch((err)=>{
+            console.log(err)
+            res.send({
+                message:"Please try again later",
+                b:false
+            })
+        })
+})
+
 app.post('/setPassword',(req,res)=>{
     const {email,password} = req.body
-    bcrypt.hash(password.toString(),Number(process.env.SALT),(err,password)=>{
+    bcrypt.hash(password.toString(),salt,(err,password)=>{
         if(err){
             console.log(err);
         }
@@ -213,7 +276,7 @@ app.post('/setPassword',(req,res)=>{
 // place orders
 app.post('/placeorders',(req,res)=>{
     const {cart,t} = req.body
-    const decoded = jwt.verify(t,"process.env.KEY");
+    const decoded = jwt.verify(t,"jwtSecretKey");
     console.log(decoded)
     const lgt = decoded.id
     User.findOne({_id:lgt})
@@ -230,7 +293,7 @@ app.post('/placeorders',(req,res)=>{
 
 app.post("/orderList",(req,res)=>{
     const {t} = req.body
-    const decoded = jwt.verify(t,"process.env.KEY");
+    const decoded = jwt.verify(t,"jwtSecretKey");
     const lgt = decoded.id
     User.findOne({_id:lgt})
     .then((foundUser)=>{
@@ -245,7 +308,7 @@ app.post("/orderList",(req,res)=>{
 
 app.post("/deleteOrder",(req,res)=>{
     const {t,id} = req.body
-    const decoded = jwt.verify(t,"process.env.KEY");
+    const decoded = jwt.verify(t,"jwtSecretKey");
     const lgt = decoded.id
     User.updateOne({_id:lgt},{$pull: {cart: {_id:id}}})
     .then((foundUser)=>{
@@ -254,5 +317,3 @@ app.post("/deleteOrder",(req,res)=>{
 })
 
 app.listen(5000,() => {console.log("Server Started on 5000")})
-
-
