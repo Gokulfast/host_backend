@@ -115,7 +115,7 @@ app.post("/register", (req, res)=> {
             if(foundUser){
                 res.send({message: "User already registerd",Login:true})
             } else {
-                bcrypt.hash(password.toString(),Number(process.env.SALT),(err,password)=>{
+                bcrypt.hash(password.toString(),salt,(err,password)=>{
                     if(err){
                         console.log(err);
                     }
@@ -130,6 +130,7 @@ app.post("/register", (req, res)=> {
             }
     })   
 }) 
+
 app.post("/login", (req, res)=> {
     console.log(req.body)
     const {email, password} = req.body
